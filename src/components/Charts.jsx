@@ -51,40 +51,16 @@ function BalanceTrendChart({ monthlyData }) {
 
           <Legend />
 
-          {/* ✅ Added Income */}
-          <Line
-            type="monotone"
-            dataKey="income"
-            stroke="#10b981"
-            strokeWidth={2}
-            dot={{ fill: '#10b981' }}
-          />
-
-          {/* ✅ Added Expenses */}
-          <Line
-            type="monotone"
-            dataKey="expenses"
-            stroke="#ef4444"
-            strokeWidth={2}
-            dot={{ fill: '#ef4444' }}
-          />
-
-          {/* ✅ Existing Balance */}
-          <Line
-            type="monotone"
-            dataKey="balance"
-            stroke="#8b5cf6"
-            strokeWidth={3}
-            dot={{ fill: '#8b5cf6' }}
-          />
-
+          <Line type="monotone" dataKey="income" stroke="#10b981" strokeWidth={2} dot={{ fill: '#10b981' }} />
+          <Line type="monotone" dataKey="expenses" stroke="#ef4444" strokeWidth={2} dot={{ fill: '#ef4444' }} />
+          <Line type="monotone" dataKey="balance" stroke="#8b5cf6" strokeWidth={3} dot={{ fill: '#8b5cf6' }} />
         </LineChart>
       </ResponsiveContainer>
     </div>
   );
 }
 
-/* 🔴 Pie chart NOT changed */
+/* ✅ Pie chart made responsive */
 function SpendingBreakdownChart({ categoryData }) {
   const totalSpending = categoryData.reduce((sum, item) => sum + item.value, 0);
 
@@ -96,16 +72,18 @@ function SpendingBreakdownChart({ categoryData }) {
         <h2 className="text-xl font-semibold">Spending Breakdown</h2>
       </div>
 
-      <div className="flex gap-8 items-center">
+      {/* 🔥 Responsive layout */}
+      <div className="flex flex-col md:flex-row gap-6 items-center">
         
-        <div className="flex-shrink-0">
-          <ResponsiveContainer width={200} height={200}>
+        {/* 🔥 Responsive chart container */}
+        <div className="w-full md:w-[250px] h-[250px]">
+          <ResponsiveContainer width="100%" height="100%">
             <RePieChart>
               <Pie
                 data={categoryData}
                 cx="50%"
                 cy="50%"
-                outerRadius={90}
+                outerRadius="80%"
                 dataKey="value"
                 startAngle={90}
                 endAngle={-270}
@@ -114,6 +92,7 @@ function SpendingBreakdownChart({ categoryData }) {
                   <Cell key={index} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
+
               <Tooltip
                 contentStyle={{
                   backgroundColor: '#1a1a1a',
@@ -125,7 +104,8 @@ function SpendingBreakdownChart({ categoryData }) {
           </ResponsiveContainer>
         </div>
 
-        <div className="flex-1 space-y-4">
+        {/* 🔥 Legend / details */}
+        <div className="flex-1 w-full space-y-4">
           
           <div className="text-sm font-semibold text-gray-300 mb-4">
             Total: ₹{totalSpending.toLocaleString()}
