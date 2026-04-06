@@ -187,7 +187,8 @@ http://localhost:5173
 src/
 │
 ├── api/
-│ └── transactions.js  
+│ └── transactions.js
+│
 ├── components/
 │ ├── Header.jsx
 │ ├── SummaryCards.jsx
@@ -196,7 +197,8 @@ src/
 │ ├── TransactionTable.jsx
 │ ├── TransactionFilters.jsx
 │ ├── AddTransactionForm.jsx
-│ └── EditTransactionModal.jsx  
+│ ├── EditTransactionModal.jsx
+│ └── Sidebar.jsx
 │
 ├── data/
 │ └── mockTransactions.js

@@ -8,6 +8,7 @@ import {
   filterTransactions,
 } from './utils/calculations';
 import { addTransaction, updateTransaction, deleteTransaction, fetchTransactions } from './api/transactions';
+
 import { Header } from './components/Header';
 import { SummaryCards } from './components/SummaryCards';
 import { ChartsGrid } from './components/Charts';
@@ -16,10 +17,13 @@ import { TransactionFilters } from './components/TransactionFilters';
 import { AddTransactionForm } from './components/AddTransactionForm';
 import { TransactionTable } from './components/TransactionTable';
 import { EditTransactionModal } from './components/EditTransactionModal';
+import { Sidebar } from './components/Sidebar';
 
 function App() {
   const [transactions, setTransactions] = useState(MOCK_TRANSACTIONS);
   const [role, setRole] = useState('viewer');
+  const [activeTab, setActiveTab] = useState('dashboard');
+
   const [filterType, setFilterType] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('date');
@@ -58,9 +62,7 @@ function App() {
   );
 
   const summary = useMemo(() => calculateSummary(transactions), [transactions]);
-
   const monthlyData = useMemo(() => calculateMonthlyData(transactions), [transactions]);
-
   const categoryData = useMemo(() => calculateCategoryData(transactions), [transactions]);
 
   const insights = useMemo(
@@ -119,7 +121,9 @@ function App() {
 
       await updateTransaction(editingTransaction.id, updates);
       setTransactions(
-        transactions.map((t) => (t.id === editingTransaction.id ? { ...t, ...updates } : t))
+        transactions.map((t) =>
+          t.id === editingTransaction.id ? { ...t, ...updates } : t
+        )
       );
       setEditingTransaction(null);
       setEditFormData({});
@@ -147,57 +151,135 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white p-4 md:p-8">
-      <div className="max-w-7xl mx-auto">
-        <Header role={role} setRole={setRole} />
-        <SummaryCards summary={summary} />
+    <div className="min-h-screen bg-black text-white">
 
-        <ChartsGrid monthlyData={monthlyData} categoryData={categoryData} />
+      {/* Sidebar */}
+      <div className="hidden md:block fixed left-0 top-0">
+        <Sidebar
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          role={role}
+          setRole={setRole}
+          onLogout={() => alert("Logout")}
+        />
+      </div>
 
-        <Insights insights={insights} />
+      {/* Content */}
+      <div className="p-4 md:p-6 lg:p-8 md:ml-64">
+        <div className="max-w-7xl mx-auto">
 
-        <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 p-6 rounded-xl border border-gray-700/50 backdrop-blur-sm">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-            <h2 className="text-2xl font-semibold">Transactions</h2>
-            {role === 'admin' && (
-              <button
-                onClick={() => setShowAddForm(!showAddForm)}
-                className="bg-gradient-to-r from-blue-500 to-purple-500 px-4 py-2 rounded-lg font-medium hover:from-blue-600 hover:to-purple-600 transition-all disabled:opacity-50"
-                disabled={isLoading}
-              >
-                {showAddForm ? 'Cancel' : '+ Add Transaction'}
-              </button>
-            )}
-          </div>
+          <Header role={role} setRole={setRole} />
 
-          {showAddForm && role === 'admin' && (
-            <AddTransactionForm
-              newTransaction={newTransaction}
-              setNewTransaction={setNewTransaction}
-              onAdd={handleAddTransaction}
-              onCancel={() => setShowAddForm(false)}
-              isLoading={isLoading}
-            />
+          {/* DASHBOARD */}
+          {activeTab === 'dashboard' && (
+            <>
+              <SummaryCards summary={summary} />
+              <ChartsGrid monthlyData={monthlyData} categoryData={categoryData} />
+              <Insights insights={insights} />
+
+              {/* 💻 Desktop → Recent */}
+              <div className="hidden md:block bg-gray-800/50 p-6 rounded-xl border border-gray-700/50">
+                <h2 className="text-2xl font-semibold mb-4">Recent Transactions</h2>
+
+                <TransactionTable
+                  transactions={filteredTransactions.slice(0, 5)}
+                  role={role}
+                  onEdit={handleEditTransaction}
+                  onDelete={handleDeleteTransaction}
+                  isDeleting={isDeleting}
+                />
+              </div>
+
+              {/* 📱 Mobile → Full + Add */}
+              <div className="block md:hidden bg-gray-800/50 p-6 rounded-xl border border-gray-700/50">
+
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-2xl font-semibold">Transactions</h2>
+
+                  {role === 'admin' && (
+                    <button
+                      onClick={() => setShowAddForm(!showAddForm)}
+                      className="bg-blue-500 px-3 py-1.5 text-sm rounded-lg"
+                    >
+                      {showAddForm ? 'Cancel' : '+ Add'}
+                    </button>
+                  )}
+                </div>
+
+                {showAddForm && role === 'admin' && (
+                  <AddTransactionForm
+                    newTransaction={newTransaction}
+                    setNewTransaction={setNewTransaction}
+                    onAdd={handleAddTransaction}
+                    onCancel={() => setShowAddForm(false)}
+                    isLoading={isLoading}
+                  />
+                )}
+
+                <TransactionTable
+                  transactions={filteredTransactions}
+                  role={role}
+                  onEdit={handleEditTransaction}
+                  onDelete={handleDeleteTransaction}
+                  isDeleting={isDeleting}
+                />
+              </div>
+            </>
           )}
 
-          <TransactionFilters
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            filterType={filterType}
-            setFilterType={setFilterType}
-            sortBy={sortBy}
-            setSortBy={setSortBy}
-            sortOrder={sortOrder}
-            setSortOrder={setSortOrder}
-          />
+          {/* TRANSACTIONS */}
+          {activeTab === 'transactions' && (
+            <div className="bg-gray-800/50 p-6 rounded-xl border border-gray-700/50">
 
-          <TransactionTable
-            transactions={filteredTransactions}
-            role={role}
-            onEdit={handleEditTransaction}
-            onDelete={handleDeleteTransaction}
-            isDeleting={isDeleting}
-          />
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-semibold">Transactions</h2>
+
+                {role === 'admin' && (
+                  <button
+                    onClick={() => setShowAddForm(!showAddForm)}
+                    className="bg-blue-500 px-4 py-2 rounded-lg"
+                  >
+                    {showAddForm ? 'Cancel' : '+ Add Transaction'}
+                  </button>
+                )}
+              </div>
+
+              {showAddForm && role === 'admin' && (
+                <AddTransactionForm
+                  newTransaction={newTransaction}
+                  setNewTransaction={setNewTransaction}
+                  onAdd={handleAddTransaction}
+                  onCancel={() => setShowAddForm(false)}
+                  isLoading={isLoading}
+                />
+              )}
+
+              <TransactionFilters
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+                filterType={filterType}
+                setFilterType={setFilterType}
+                sortBy={sortBy}
+                setSortBy={setSortBy}
+                sortOrder={sortOrder}
+                setSortOrder={setSortOrder}
+              />
+
+              <TransactionTable
+                transactions={filteredTransactions}
+                role={role}
+                onEdit={handleEditTransaction}
+                onDelete={handleDeleteTransaction}
+                isDeleting={isDeleting}
+              />
+            </div>
+          )}
+
+          {/* INSIGHTS */}
+          {activeTab === 'insights' && (
+            <Insights insights={insights} />
+          )}
+
         </div>
       </div>
 
